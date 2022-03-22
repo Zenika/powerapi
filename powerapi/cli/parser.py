@@ -402,6 +402,8 @@ class MainParser(Parser):
         :raise BadTypeException: when an argument is parsed with a value of an
                                  incorrect type
         """
+        
+        
         try:
             args, _ = getopt.getopt(args, self.short_arg, self.long_arg)
         except getopt.GetoptError as exn:

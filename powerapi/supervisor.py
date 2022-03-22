@@ -31,7 +31,7 @@ import sys
 
 from typing import Type
 
-from thespian.actors import ActorSystem
+from thespian.actors import ActorSystem, PoisonMessage
 
 from powerapi.message import OKMessage, ErrorMessage, StartMessage, EndMessage
 from powerapi.actor import InitializationException, Actor
@@ -131,9 +131,13 @@ class Supervisor:
             self._add_actor(address, name, actor_cls)
             logging.info('launch %s actor', name)
             return address
+        if isinstance(answer, PoisonMessage):
+            logging.error("failed to start %s", name)
+            logging.error(answer.details)
+            return
         elif isinstance(answer, ErrorMessage):
             raise InitializationException(answer.error_message)
-        raise InitializationException("Unknow message type : " + str(type(answer)))
+        raise InitializationException("Unknown message type : " + str(type(answer)))
 
     def _add_actor(self, address, name, actor_cls):
         if issubclass(actor_cls, PusherActor):

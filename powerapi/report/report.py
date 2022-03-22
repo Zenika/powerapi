@@ -82,6 +82,19 @@ class Report(Message):
                 self.target == other.target and
                 self.metadata == other.metadata)
 
+    def _gen_tag(self, metadata_keept):
+        tags = {'sensor': self.sensor,
+                'target': self.target
+                }
+
+        for metadata_name in metadata_keept:
+            if metadata_name not in self.metadata:
+                raise BadInputData('no tag ' + metadata_name + ' in power report', self)
+            else:
+                tags[metadata_name] = self.metadata[metadata_name]
+
+        return tags
+
     @staticmethod
     def to_json(report: Report) -> Dict:
         """

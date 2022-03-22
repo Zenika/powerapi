@@ -33,6 +33,14 @@ from typing import Dict, Any, List, Tuple
 
 from powerapi.report.report import Report, CSV_HEADER_COMMON, BadInputData, CsvLines
 
+import logging
+
+try:
+    from influxdb_client import Point
+    from influxdb_client.client.write_api import SYNCHRONOUS
+    from requests.exceptions import ConnectionError
+except ImportError:
+    logging.getLogger().info("influx_client is not installed.")
 
 CSV_HEADER_POWER = CSV_HEADER_COMMON + ['power', 'socket']
 
@@ -144,32 +152,15 @@ class PowerReport(Report):
         power = report.power
         return filename, power
 
-    def _gen_tag(self, metadata_keept):
-        tags = {'sensor': self.sensor,
-                'target': self.target
-                }
-
-        for metadata_name in metadata_keept:
-            if metadata_name not in self.metadata:
-                raise BadInputData('no tag ' + metadata_name + ' in power report', self)
-            else:
-                tags[metadata_name] = self.metadata[metadata_name]
-
-        return tags
-
     @staticmethod
     def to_influxdb(report: PowerReport, tags: List[str]) -> Dict:
         """
         :return: a dictionary, that can be stored into an influxdb, from a given PowerReport
         """
-        return {
-            'measurement': 'power_consumption',
-            'tags': report._gen_tag(tags),
-            'time': str(report.timestamp),
-            'fields': {
-                'power': report.power
-            }
-        }
+        p = Point('power_consumption').field("power", report.power)
+        for key, value in report._gen_tag(tags).items():
+            p.tag(key, value)
+        return p
 
     @staticmethod
     def to_prometheus(report: PowerReport, tags: List[str]) -> Dict:
