@@ -157,7 +157,7 @@ class PowerReport(Report):
         """
         :return: a dictionary, that can be stored into an influxdb, from a given PowerReport
         """
-        p = Point('power_consumption').field("power", report.power)
+        p = Point('power_consumption').field("power", report.power).time(int(report.timestamp.timestamp()))
         for key, value in report._gen_tag(tags).items():
             p.tag(key, value)
         return p
